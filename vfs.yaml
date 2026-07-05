@@ -1,0 +1,63 @@
+version: "1"
+metadata:
+  name: tenant-wsi-mil-pilot
+storage:
+  type: hostpath
+  host_path: /data/vfs
+setup:
+  parallelism: 8
+sources:
+  - id: clinical_patient
+    type: fhir
+    endpoint: http://colabbio-hapi-fhir.colabbio-dev.svc.cluster.local:8080/fhir
+    fhir:
+      resource: Patient
+      fields:
+        - "id as Patient ID"
+        - "gender as target"
+    materialize:
+      output: clinical/fhir_patient.csv
+
+  - id: clinical_condition
+    type: fhir
+    endpoint: http://colabbio-hapi-fhir.colabbio-dev.svc.cluster.local:8080/fhir
+    fhir:
+      resource: Condition
+    materialize:
+      output: clinical/fhir_condition.csv
+
+  - id: clinical_document_reference
+    type: fhir
+    endpoint: http://colabbio-hapi-fhir.colabbio-dev.svc.cluster.local:8080/fhir
+    fhir:
+      resource: DocumentReference
+    materialize:
+      output: clinical/fhir_document_reference.csv
+
+  - id: raw_images
+    type: files
+    endpoint: nfs://colabbio-storage/wsi_data
+    files:
+      storage: nfs
+      base_path: /mnt/wsi_data
+      pattern: "**/*.svs"
+    materialize:
+      output: images/manifest.csv
+      download_dir: images/svs_raw
+
+  - id: omero_annotations
+    type: omero
+    endpoint: http://colabbio-omero-web-svc.colabbio-dev.svc.cluster.local:4080
+    auth:
+      type: basic
+      secret_ref: env://OMERO_CREDENTIALS
+    omero:
+      dataset_id: 1
+      extracts: [metadata_csv, thumbnail]
+    materialize:
+      output: omero/annotations.csv
+      download_dir: omero/thumbnails
+
+mount:
+  path: /data/vfs
+  readonly: true
