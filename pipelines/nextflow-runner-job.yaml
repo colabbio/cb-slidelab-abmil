@@ -1,0 +1,40 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: nextflow-runner
+  namespace: colabbio-dev
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      serviceAccountName: nextflow-sa
+      containers:
+        - name: nextflow
+          image: nextflow/nextflow:24.04.4
+          command:
+            - nextflow
+            - run
+            - /workspace/pipelines/main.nf
+            - -c
+            - /workspace/pipelines/nextflow.config
+          workingDir: /workspace
+          volumeMounts:
+            - name: work-volume
+              mountPath: /workspace/work
+            - name: project-volume
+              mountPath: /workspace
+            - name: modules-volume
+              mountPath: /workspace/cb-nextflow-modules
+      volumes:
+        - name: work-volume
+          persistentVolumeClaim:
+            claimName: nextflow-work-pvc
+        - name: project-volume
+          hostPath:
+            path: /home/jmolmo/git/colabbio/cb-slidelab-abmil
+            type: Directory
+        - name: modules-volume
+          hostPath:
+            path: /home/jmolmo/git/colabbio/cb-nextflow-modules
+            type: Directory
