@@ -36,10 +36,10 @@ sources:
 
   - id: raw_images
     type: files
-    endpoint: nfs://colabbio-storage/wsi_data
+    endpoint: gs://ib-ai/wsi_data
     files:
-      storage: nfs
-      base_path: /mnt/wsi_data
+      storage: gcs
+      base_path: wsi_data
       pattern: "**/*.svs"
     materialize:
       output: images/manifest.csv
