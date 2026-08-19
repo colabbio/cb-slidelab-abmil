@@ -8,6 +8,8 @@ include { MLFLOW_REGISTER; TRITON_DEPLOY } from '../../cb-nextflow-modules/mlops
 params.vfs_mount = '/data/vfs'
 params.omero_host = 'colabbio-omero'
 params.device = 'cuda'
+params.auto_backup = true
+params.data_lake_bucket = 'colabbio-data-lake-prevvy1'
 
 process SLIDELAB_EXTRACT {
     container 'colabbio/slidelab:latest'

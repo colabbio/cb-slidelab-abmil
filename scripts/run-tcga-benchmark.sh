@@ -16,6 +16,13 @@ echo " GCS Virtual Source:   gs://idc-open-data (TCGA WSI Archive)"
 echo " Zero-Download Mode:   ENABLED (Direct POSIX streaming over FUSE)"
 echo "===================================================================="
 
+# Step 0: Auto-Restore Database State & Pull Data Lake Assets if configured
+if [ "${COLABBIO_AUTO_RESTORE:-true}" = "true" ]; then
+    echo "==> Step 0: Restoring OMERO & MLflow catalog databases from Data Lake..."
+    bash scripts/restore-databases.sh || true
+    bash scripts/sync-data-lake.sh pull || true
+fi
+
 # Step 1: Materialize MedVFS POSIX tree / TCGA slides
 echo "==> Step 1: Initializing MedVFS POSIX virtual mount..."
 sudo mkdir -p "${VFS_MOUNT}/images/svs_raw"
@@ -57,6 +64,19 @@ nextflow run pipelines/main.nf \
 END_TIME=$(date +%s)
 
 TOTAL_SECONDS=$((END_TIME - START_TIME))
+# Step 4: Auto-Backup Databases and Push Generated Artifacts to Data Lake
+if [ "${COLABBIO_AUTO_BACKUP:-true}" = "true" ]; then
+    echo "==> Step 4: Taking database snapshot and syncing outputs to Cloud Data Lake..."
+    # Copy generated features and summaries to local data lake
+    mkdir -p /data/features /data/omero-data
+    find work -name '*.h5' -exec cp -u {} /data/features/ \; 2>/dev/null || true
+    find work -name '*metrics.json' -exec cp -u {} /data/omero-data/ \; 2>/dev/null || true
+    find work -name 'omero_sync_summary.json' -exec cp -u {} /data/omero-data/ \; 2>/dev/null || true
+    
+    bash scripts/backup-databases.sh || true
+    bash scripts/sync-data-lake.sh push || true
+fi
+
 echo "===================================================================="
 echo " Zero-Download Benchmarking Run Completed Successfully!"
 echo " Total Execution Time: ${TOTAL_SECONDS} seconds"
