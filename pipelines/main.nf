@@ -2,11 +2,12 @@
 
 nextflow.enable.dsl=2
 
-include { MLFLOW_REGISTER; TRITON_DEPLOY } from '../cb-nextflow-modules/mlops.nf'
+include { MLFLOW_REGISTER; TRITON_DEPLOY } from '../../cb-nextflow-modules/mlops.nf'
 
 // MedVFS Data Path - Mounted via Kubernetes PVC
 params.vfs_mount = '/data/vfs'
 params.omero_host = 'colabbio-omero'
+params.device = 'cuda'
 
 process SLIDELAB_EXTRACT {
     container 'colabbio/slidelab:latest'
@@ -28,7 +29,7 @@ process SLIDELAB_EXTRACT {
             -i "${vfs_dir}/images/svs_raw" \
             -o features \
             --stream_features \
-            --device cpu \
+            --device ${params.device} \
             --export_json_metrics
         
         cp features/*_metrics.json metrics/ 2>/dev/null || true
@@ -70,6 +71,7 @@ process WRITE_OMERO_ANNOTATIONS {
     
     script:
     """
+    export PYTHONPATH=/app:/app/SlideLab:/app/SlideLab/SlideLab:\${PYTHONPATH:-}
     echo "Writing SlideLab QC and MIL annotations back to OMERO server..."
     python -c "
 import glob, json
