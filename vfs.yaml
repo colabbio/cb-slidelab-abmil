@@ -12,6 +12,10 @@ storage:
     features: /data/features
     db_backups: /data/db-backups
     vfs_mount: /data/vfs
+persistence:
+  auto_restore_on_bootstrap: true
+  auto_backup_on_finish: true
+  auto_sync_artifacts: true
 setup:
   parallelism: 8
 sources:
