@@ -7,3 +7,8 @@
 2026-07-03 15:11:55	-	curious_mahavira	-	469714d04d469bbd67f700e8d70f5685	4fe26eb8-4dc2-4549-a828-eef0343c5732	nextflow run /workspace/pipelines/main.nf -c /workspace/pipelines/nextflow.config
 2026-07-03 15:12:39	16.9s	thirsty_ritchie	ERR	2b61407422a81f719c486cb092701430	5e92a9ed-2c65-4f19-a088-e826fd94e1a6	nextflow run /workspace/pipelines/main.nf -c /workspace/pipelines/nextflow.config
 2026-07-03 15:14:38	26.6s	elegant_coulomb	OK	2b61407422a81f719c486cb092701430	8be78e62-b11d-4a5d-ba99-ed2bfdf53bf0	nextflow run /workspace/pipelines/main.nf -c /workspace/pipelines/nextflow.config
+2026-08-19 10:34:40	2.3s	compassionate_wing	ERR	8f13a59e1dbc29b36decc2f0a8636883	d167dbbe-f09e-4e9a-bbae-05c696d5351c	nextflow run pipelines/main.nf -with-docker 'colabbio/slidelab:latest'
+2026-08-19 10:35:51	3s	voluminous_allen	ERR	8f13a59e1dbc29b36decc2f0a8636883	ba4b2e28-0f0f-4b2a-b24f-16042051ecd1	nextflow run pipelines/main.nf -profile local
+2026-08-19 10:37:14	3.9s	nostalgic_goodall	ERR	8f13a59e1dbc29b36decc2f0a8636883	b5fc9e40-6ba6-4b31-afd6-e60499a799b4	nextflow run pipelines/main.nf -profile local
+2026-08-19 10:39:38	4.2s	nauseous_magritte	ERR	ee06710a0e255dfc3a3b77046b6c690b	43999bbe-a7b9-4a18-8529-1d2043667a95	nextflow run pipelines/main.nf -profile local
+2026-08-19 10:41:08	5s	happy_majorana	OK	ee06710a0e255dfc3a3b77046b6c690b	1bf3dd10-9ebb-4ae8-b064-8bf593d92d7d	nextflow run pipelines/main.nf -profile local

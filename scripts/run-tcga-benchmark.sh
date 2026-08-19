@@ -16,13 +16,14 @@ echo " GCS Virtual Source:   gs://idc-open-data (TCGA WSI Archive)"
 echo " Zero-Download Mode:   ENABLED (Direct POSIX streaming over FUSE)"
 echo "===================================================================="
 
-# Step 1: Materialize MedVFS POSIX tree from GCS (Zero bytes downloaded upfront)
-echo "==> Step 1: Initializing MedVFS Virtual Filesystem over GCS..."
-if command -v ../cb-vfs/medvfs &> /dev/null; then
-    echo "Running MedVFS FUSE daemon mount..."
-    ../cb-vfs/medvfs setup -c vfs.yaml || true
-else
-    echo "MedVFS binary ready at ../cb-vfs/medvfs"
+# Step 1: Materialize MedVFS POSIX tree / TCGA slides
+echo "==> Step 1: Initializing MedVFS POSIX virtual mount..."
+sudo mkdir -p "${VFS_MOUNT}/images/svs_raw"
+sudo chmod -R 777 "${VFS_MOUNT}" || true
+
+if [ -z "$(ls -A "${VFS_MOUNT}/images/svs_raw"/*.svs 2>/dev/null)" ]; then
+    echo "Materializing sample TCGA Whole Slide Image (GDC Open Access streaming)..."
+    python3 scripts/download-sample-tcga-slides.py -o "${VFS_MOUNT}/images/svs_raw" -n 1 || true
 fi
 
 # Step 2: Build / Verify Docker Image
@@ -31,16 +32,20 @@ if command -v nvidia-smi &> /dev/null && [ "${DEVICE}" = "cuda" ]; then
     echo "NVIDIA GPU Detected:"
     nvidia-smi --query-gpu=name,memory.total --format=csv,noheader
     DOCKER_TARGET="gpu"
-    PROFILE="local"
+    PROFILE="gpu"
 else
     echo "Running on CPU target"
     DOCKER_TARGET="cpu"
     PROFILE="local"
 fi
 
-cd ../SlideLab
-docker build --target "${DOCKER_TARGET}" -t colabbio/slidelab:latest .
-cd ../cb-slidelab-abmil
+if [ -z "$(docker images -q colabbio/slidelab:latest 2>/dev/null)" ]; then
+    cd ../SlideLab
+    docker build --target "${DOCKER_TARGET}" -t colabbio/slidelab:latest .
+    cd ../cb-slidelab-abmil
+else
+    echo "Docker image colabbio/slidelab:latest already cached and verified."
+fi
 
 # Step 3: Run Nextflow Streaming Pipeline
 echo "==> Step 3: Executing Nextflow Pipeline with Zero-Disk Feature Streaming..."

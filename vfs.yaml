@@ -2,8 +2,16 @@ version: "1"
 metadata:
   name: tenant-wsi-mil-pilot
 storage:
-  type: hostpath
-  host_path: /data/vfs
+  type: hybrid
+  host_path: /data
+  gcs_bucket: gs://colabbio-data-lake-prevvy1
+  subdirs:
+    models: /data/models
+    mlflow_artifacts: /data/mlflow-artifacts
+    omero_data: /data/omero-data
+    features: /data/features
+    db_backups: /data/db-backups
+    vfs_mount: /data/vfs
 setup:
   parallelism: 8
 sources:
