@@ -1,0 +1,3 @@
+patient_id,target,slide_file
+TCGA-TEST-001,1,sample_slide_01.svs
+TCGA-TEST-002,0,sample_slide_02.svs
