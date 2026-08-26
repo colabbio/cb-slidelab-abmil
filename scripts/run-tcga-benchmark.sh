@@ -25,41 +25,42 @@ fi
 
 # Step 1: Materialize MedVFS POSIX tree / TCGA slides
 echo "==> Step 1: Initializing MedVFS POSIX virtual mount..."
-sudo mkdir -p "${VFS_MOUNT}/images/svs_raw"
-sudo chmod -R 777 "${VFS_MOUNT}" || true
+sudo mkdir -p "${VFS_MOUNT}/images/svs_raw" "${VFS_MOUNT}/features" "${VFS_MOUNT}/clinical" 2>/dev/null || true
+sudo chmod -R 777 "${VFS_MOUNT}" 2>/dev/null || true
 
-if [ -z "$(ls -A "${VFS_MOUNT}/images/svs_raw"/*.svs 2>/dev/null)" ]; then
-    echo "Materializing sample TCGA Whole Slide Image (GDC Open Access streaming)..."
-    python3 scripts/download-sample-tcga-slides.py -o "${VFS_MOUNT}/images/svs_raw" -n 1 || true
-fi
+# Copy existing cohort manifest and features if available locally or in data lake
+for src_csv in \
+    "/home/jmolmo/git/colabbio/cb-nextflow-modules/scripts/cohort_real_brca_gcp.csv" \
+    "/home/jmolmo/colabbio/cohort_real_brca_gcp.csv" \
+    "$HOME/colabbio/cohort_real_brca_gcp.csv" \
+    "cohort_real_brca_gcp.csv"; do
+    if [ -f "$src_csv" ]; then
+        cp "$src_csv" "${VFS_MOUNT}/clinical/cohort_real_brca.csv" 2>/dev/null || true
+        cp "$src_csv" "/data/cohort_real_brca.csv" 2>/dev/null || true
+        break
+    fi
+done
 
-# Step 2: Build / Verify Docker Image
-echo "==> Step 2: Verifying SlideLab Docker image..."
-if command -v nvidia-smi &> /dev/null && [ "${DEVICE}" = "cuda" ]; then
-    echo "NVIDIA GPU Detected:"
+# Step 2: Auto-Detect Hardware & Profile
+echo "==> Step 2: Checking Compute Hardware & Docker Profile..."
+if command -v nvidia-smi &> /dev/null && nvidia-smi &> /dev/null; then
+    echo "🎮 NVIDIA GPU Detected:"
     nvidia-smi --query-gpu=name,memory.total --format=csv,noheader
-    DOCKER_TARGET="gpu"
+    DEVICE="cuda"
     PROFILE="gpu"
 else
-    echo "Running on CPU target"
-    DOCKER_TARGET="cpu"
+    echo "💻 Running on CPU target (No physical GPU detected)"
+    DEVICE="cpu"
     PROFILE="local"
 fi
 
-if [ -z "$(docker images -q colabbio/slidelab:latest 2>/dev/null)" ]; then
-    cd ../SlideLab
-    docker build --target "${DOCKER_TARGET}" -t colabbio/slidelab:latest .
-    cd ../cb-slidelab-abmil
-else
-    echo "Docker image colabbio/slidelab:latest already cached and verified."
-fi
-
 # Step 3: Run Nextflow Streaming Pipeline
-echo "==> Step 3: Executing Nextflow Pipeline with Zero-Disk Feature Streaming..."
+echo "==> Step 3: Executing Nextflow Pipeline with Zero-Disk Feature Streaming (Profile: ${PROFILE}, Device: ${DEVICE})..."
 START_TIME=$(date +%s)
 nextflow run pipelines/main.nf \
     -profile "${PROFILE}" \
     --vfs_mount "${VFS_MOUNT}" \
+    --cohort_csv "/data/cohort_real_brca.csv" \
     --device "${DEVICE}"
 END_TIME=$(date +%s)
 
