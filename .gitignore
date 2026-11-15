@@ -1,3 +1,7 @@
 work/
 .nextflow/
 .nextflow.log*
+
+# Added by ColabBio workflow hygiene
+features/
+models/
