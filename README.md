@@ -1,22 +1,29 @@
-# ColabBio Tenant Pilot: SlideLab + ABMIL
+# ColabBio SlideLab + ABMIL Pipeline
 
-Este repositorio contiene la implementación piloto de un Tenant (Data Scientist) utilizando la arquitectura Data Mesh de ColabBio basado en **Nextflow** sobre **Kubernetes**.
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
-## Pipeline Principal (`main.nf`)
-El pipeline consta de 2 fases Core (propiedad del tenant) y 2 fases MLOps (abstraídas por la plataforma):
-1. `SLIDELAB_EXTRACT`: Consume imágenes WSI desde MedVFS y extrae características visuales (Features).
-2. `ABMIL_TRAIN`: Entrena un clasificador Multiple Instance Learning usando PyTorch sobre las características previas.
-3. `MLFLOW_REGISTER` (Plataforma): Registra automáticamente los pesos y métricas en el Model Registry central.
-4. `TRITON_DEPLOY` (Plataforma): Despliega el modelo de inferencia en tiempo real en Triton Inference Server.
+End-to-end **Nextflow DSL2** digital pathology pipeline combining **SlideLab** zero-disk Whole Slide Image (WSI) streaming over **MedVFS** (`cb-vfs`) with **Attention-Based Multiple Instance Learning (ABMIL)** and **Polarized Attentional Certainty (PAC)** scoring.
 
-## Integración con ColabBio MLOps
-La gran ventaja de este diseño es que el código de entrenamiento del Tenant permanece completamente aislado de la complejidad de la infraestructura. El MLOps se incluye automáticamente desde el repositorio central:
+## Pipeline Stages (`main.nf`)
 
-```groovy
-include { MLFLOW_REGISTER; TRITON_DEPLOY } from 'github.com/colabbio/cb-nextflow-modules/mlops.nf'
-```
+1. **`SLIDELAB_EXTRACT`**: Streams WSIs lazily from MedVFS POSIX mounts (`/data/vfs`), applies tissue segmentation, Laplacian blur & pen-marker QC, Macenko stain normalization, and encodes features into `features.h5`.
+2. **`WRITE_OMERO_ANNOTATIONS`**: Persists QC metrics, classification probabilities, and PAC scores back to OMERO as `MapAnnotation` records.
+3. **`ABMIL_TRAIN`**: Trains a PyTorch Attention-Based MIL classifier on extracted bag features.
+4. **`MLFLOW_REGISTER`** *(ColabBio Platform)*: Registers model weights and metrics via [`cb-nextflow-modules`](https://github.com/colabbio/cb-nextflow-modules).
+5. **`TRITON_DEPLOY`** *(ColabBio Platform)*: Deploys the trained model for inference on Triton Inference Server.
 
-Para lanzar la ejecución en el cluster de ColabBio:
+## Documentation & Thesis
+
+- **[SlideLab & PAC Preprint](https://github.com/colabbio/SlideLab/blob/v2.0/docs/slidelab_article.md)** — Benchmarks (1,000 TCGA-COAD WSIs), ABMIL MSI vs. MSS results, and PAC interpretability.
+- **[UC San Diego M.S. Thesis Defense Slides (PDF)](https://github.com/colabbio/SlideLab/blob/v2.0/docs/thesis_presentation.pdf)** — Lorenzo Olmo Marchal (2025).
+- **[Researcher Guide](docs/RESEARCHER_GUIDE.md)** — Standalone HPC vs. ColabBio Kubernetes execution.
+
+## Quick Run (ColabBio Cluster)
+
 ```bash
 kubectl apply -f pipelines/nextflow-runner-job.yaml
 ```
+
+## License
+
+Licensed under the [Apache License 2.0](LICENSE) — Copyright 2026 ColabBio.
