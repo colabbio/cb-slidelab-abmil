@@ -14,8 +14,9 @@ End-to-end **Nextflow DSL2** digital pathology pipeline combining **SlideLab** z
 
 ## Documentation & Thesis
 
-- **[SlideLab & PAC Preprint](https://github.com/colabbio/SlideLab/blob/v2.0/docs/slidelab_article.md)** — Benchmarks (1,000 TCGA-COAD WSIs), ABMIL MSI vs. MSS results, and PAC interpretability.
-- **[UC San Diego M.S. Thesis Defense Slides (PDF)](https://github.com/colabbio/SlideLab/blob/v2.0/docs/thesis_presentation.pdf)** — Lorenzo Olmo Marchal (2025).
+- **[SlideLab Preprint (`slidelab_article.md`)](https://github.com/colabbio/SlideLab/blob/v2.0/docs/slidelab_article.md)** — 1,000-WSI TCGA-COAD benchmarks, ABMIL MSI vs. MSS results, and zero-disk MedVFS streaming comparison.
+- **[Polarized Attentional Certainty (PAC) Preprint (`pac_article.md`)](https://github.com/colabbio/SlideLab/blob/v2.0/docs/pac_article.md)** — Interpretability metric across colorectal cancer WSIs and B-ALL flow cytometry.
+- **[UC San Diego M.S. Thesis Defense Slides (PDF)](https://github.com/colabbio/SlideLab/blob/v2.0/docs/thesis_presentation.pdf)** · **[Open in Google Slides](https://docs.google.com/presentation/d/1AZUdJUrf6N98_nFGE76qFn8rHJB9XNI0SPVWnQrF70k/present)** — Lorenzo Olmo Marchal (2025).
 - **[Researcher Guide](docs/RESEARCHER_GUIDE.md)** — Standalone HPC vs. ColabBio Kubernetes execution.
 
 ## Quick Run (ColabBio Cluster)
