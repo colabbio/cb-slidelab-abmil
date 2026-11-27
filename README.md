@@ -19,10 +19,14 @@ End-to-end **Nextflow DSL2** digital pathology pipeline combining **SlideLab** z
 - **[UC San Diego M.S. Thesis Defense Slides (PDF)](https://github.com/colabbio/SlideLab/blob/v2.0/docs/thesis_presentation.pdf)** · **[Open in Google Slides](https://docs.google.com/presentation/d/1AZUdJUrf6N98_nFGE76qFn8rHJB9XNI0SPVWnQrF70k/present)** — Lorenzo Olmo Marchal (2025).
 - **[Researcher Guide](docs/RESEARCHER_GUIDE.md)** — Standalone HPC vs. ColabBio Kubernetes execution.
 
-## Quick Run (ColabBio Cluster)
+## Quick Run
 
 ```bash
+# ColabBio Kubernetes Cluster
 kubectl apply -f pipelines/nextflow-runner-job.yaml
+
+# Local Multi-GPU Workstation (e.g. 4 NVIDIA GPUs)
+nextflow run main.nf -profile local_multigpu --num_gpus 4
 ```
 
 ## License
