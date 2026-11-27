@@ -13,7 +13,7 @@
 The **SlideLab + abMIL** deep learning framework for Whole Slide Images (WSI) and Spatial Histology is designed with **zero vendor lock-in**. It operates seamlessly under two distinct research paradigms depending on the computational context:
 
 1. **Mode 1: Standalone Lightweight CLI / HPC Mode (Without ColabBio Base)**:
-   * **Target:** University supercomputers (e.g., UCSF Wynton, Stanford Sherlock), standalone GPU workstations, or spot cloud VMs (GCP, AWS, RunPod).
+   * **Target:** University supercomputers (e.g., SLURM HPC clusters), standalone GPU workstations, or spot cloud VMs (GCP, AWS, RunPod).
    * **Requirements:** Only [Nextflow](https://www.nextflow.io) and a container engine ([Docker](https://www.docker.com) or [Singularity/Apptainer](https://apptainer.org)).
    * **Operation:** Single-line execution (`nextflow run colabbio/cb-slidelab-abmil ...`). Nextflow automatically downloads private/public container images, converts them on-the-fly to Singularity `.sif` archives without root privileges, distributes parallel workers via SLURM/PBS, and writes results to local/shared POSIX directories.
 
@@ -25,7 +25,7 @@ The **SlideLab + abMIL** deep learning framework for Whole Slide Images (WSI) an
 ```mermaid
 graph TD
     subgraph Mode1["🔬 MODE 1: Standalone Lightweight CLI / HPC (No ColabBio Base Required)"]
-        UserCLI["👨‍🔬 Researcher Terminal"] --> NF_CLI["nextflow run colabbio/cb-slidelab-abmil<br/>-profile wynton / docker / singularity"]
+        UserCLI["👨‍🔬 Researcher Terminal"] --> NF_CLI["nextflow run colabbio/cb-slidelab-abmil<br/>-profile slurm / docker / singularity"]
         NF_CLI --> GHCR_Pull["📦 Pull from ghcr.io/colabbio/*<br/>(Auto-converts to Singularity .sif)"]
         GHCR_Pull --> SLURM_Workers["⚡ SLURM / GPU Node Execution<br/>(Direct POSIX file reading)"]
         SLURM_Workers --> LocalOutputs["📊 Local HDF5 (.h5), model.pt, metrics.json"]
@@ -74,17 +74,17 @@ Any researcher with a standard Linux/macOS workstation or an HPC account only ne
 
 ---
 
-### 3.2 Scenario A: Academic Supercomputer (e.g., UCSF Wynton / SLURM Cluster)
+### 3.2 Scenario A: Academic Supercomputer (SLURM HPC Cluster)
 
-In high-performance computing clusters like **UCSF Wynton**, users cannot run Docker because it requires `root` privileges. Singularity (Apptainer) is used instead.
+In high-performance computing clusters using **SLURM**, users cannot run Docker because it requires `root` privileges. Singularity (Apptainer) is used instead.
 
 #### Automatic Singularity Handling:
 Nextflow **automatically downloads** the Docker image from `ghcr.io/colabbio/...` and converts it into a Singularity `.sif` binary file stored in your cluster scratch directory. **You do not need to build or convert `.sif` files manually.**
 
-#### Step-by-Step Execution on Wynton:
+#### Step-by-Step Execution on a SLURM HPC Cluster:
 1. **Set GitHub Container Registry Credentials** (once in `~/.bashrc`):
    ```bash
-   export NXF_SINGULARITY_LIBRARY_DIR="/wynton/scratch/$USER/singularity_cache"
+   export NXF_SINGULARITY_LIBRARY_DIR="/scratch/$USER/singularity_cache"
    export SINGULARITY_DOCKER_USERNAME="josemolmomillan"
    export SINGULARITY_DOCKER_PASSWORD="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"
    ```
@@ -93,15 +93,15 @@ Nextflow **automatically downloads** the Docker image from `ghcr.io/colabbio/...
    ```bash
    nextflow run colabbio/cb-slidelab-abmil \
        -r main \
-       -profile wynton \
-       --vfs_mount /wynton/group/cancer_center/tcga_brca_svs \
-       --cohort_csv /wynton/group/cancer_center/clinical_manifest.csv \
-       --output_dir /wynton/scratch/$USER/abmil_results
+       -profile slurm \
+       --vfs_mount /data/cancer_center/tcga_brca_svs \
+       --cohort_csv /data/cancer_center/clinical_manifest.csv \
+       --output_dir /scratch/$USER/abmil_results
    ```
 
 * **What Happens Automatically**:
   * Nextflow reads the cluster configuration, submits GPU jobs to the SLURM `gpu.q` queue requesting `--gres=gpu:1 --mem=32G`.
-  * The `ghcr.io/colabbio/slidelab:latest` image is cached at `/wynton/scratch/$USER/singularity_cache/slidelab.sif`.
+  * The `ghcr.io/colabbio/slidelab:latest` image is cached at `/scratch/$USER/singularity_cache/slidelab.sif`.
   * Tiles are extracted and passed to ResNet50 in parallel across GPU nodes.
   * Attention-based MIL model trains over the patient bags and outputs `model.pt` and `training_metrics.json`.
 
@@ -165,7 +165,7 @@ nextflow run colabbio/cb-slidelab-abmil \
 
 ## 4. MODE 2: Full ColabBio Enterprise Platform (MicroK8s / VM Appliance)
 
-Mode 2 is designed for clinical research centers, hospital deployments (e.g., UCSF Medical Center, European Hospitals under Horizon Europe), and biotech labs requiring a collaborative multi-user platform.
+Mode 2 is designed for clinical research centers, hospital deployments (e.g., Academic Medical Centers, European Hospitals under Horizon Europe), and biotech labs requiring a collaborative multi-user platform.
 
 ```mermaid
 sequenceDiagram
